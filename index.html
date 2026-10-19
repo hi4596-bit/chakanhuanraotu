@@ -28,23 +28,26 @@ body.pseudo-fullscreen .bottom{opacity:.75}
 }
 @media(max-width:360px){.actions button{font-size:10px}.bottom{font-size:9px}}
 
-/* 手机右侧左右转向滑杆：偏离中心的幅度控制旋转速度，松手停止 */
-.mobile-steer{display:none;position:absolute;right:max(10px,env(safe-area-inset-right));top:53%;transform:translateY(-50%);z-index:4;width:190px;padding:11px 12px;border:1px solid #ffffff60;border-radius:15px;background:#121820b5;color:#fff;backdrop-filter:blur(12px);box-shadow:0 5px 22px #0005;touch-action:none;user-select:none;-webkit-user-select:none}
-.steer-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;margin-bottom:9px}.steer-head span{font-size:10px;color:#ffffffb5;font-weight:400}
-.steer-control{display:flex;align-items:center;gap:7px;font-size:13px}.steer-control input{display:block;flex:1;width:100%;min-width:0;height:25px;cursor:ew-resize;accent-color:#8dbbff;touch-action:none}
+/* 手机右侧快速环视触控板：相对位移，不持续自转 */
+.mobile-steer{display:none;position:absolute;right:max(10px,env(safe-area-inset-right));top:55%;transform:translateY(-50%);z-index:4;width:146px;padding:9px;border:1px solid #ffffff50;border-radius:16px;background:#121820aa;color:#fff;backdrop-filter:blur(12px);box-shadow:0 5px 22px #0004;user-select:none;-webkit-user-select:none}
+.steer-head{display:flex;justify-content:space-between;align-items:center;gap:5px;font-size:11px;font-weight:600;margin-bottom:6px}
+.steer-head button{font-size:10px;min-height:26px;padding:3px 7px;border-radius:7px}
+.steer-pad{height:88px;display:flex;align-items:center;justify-content:space-around;gap:5px;border-radius:12px;border:1px solid #ffffff36;background:#ffffff14;touch-action:none;cursor:ew-resize;position:relative;overflow:hidden}
+.steer-pad span{font-size:19px;opacity:.65;pointer-events:none}.steer-pad strong{font-size:11px;letter-spacing:1px;pointer-events:none;text-align:center;line-height:1.7}.steer-pad.pressed{background:#528ce34d;border-color:#95c2ff}
+.steer-foot{margin-top:5px;display:flex;justify-content:space-between;align-items:center;gap:5px}.steer-foot button{min-height:27px;font-size:10px;padding:3px 7px}.steer-foot small{font-size:9px;color:#ddd}
+.mobile-steer.minimized{width:auto;padding:4px}.mobile-steer.minimized .steer-head,.mobile-steer.minimized .steer-pad,.mobile-steer.minimized .steer-foot{display:none}.steer-reopen{display:none!important}.mobile-steer.minimized .steer-reopen{display:block!important;min-height:38px;font-size:12px}
 @media (pointer:coarse), (max-width:730px){.mobile-steer{display:block}}
-@media(max-width:420px){.mobile-steer{width:164px;padding:9px 10px}.steer-head{font-size:11px}}
-@media(max-height:420px){.mobile-steer{top:59%;width:158px}}
+@media(max-height:480px){.mobile-steer{top:60%}.steer-pad{height:60px}}
 </style></head><body>
 <canvas id="view" aria-label="全景查看画面"></canvas>
 <div class="top"><div class="brand"><b>◉ 360° 全景图查看器</b><small id="filename">本地查看 · 不上传任何图片</small></div><div class="actions"><button id="open" class="primary">＋ 打开图片</button><button id="left" title="向左旋转">↶</button><button id="right" title="向右旋转">↷</button><button id="zoomIn" title="放大">＋</button><button id="zoomOut" title="缩小">－</button><button id="autorotate">自动旋转</button><button id="reset">重置视角</button><button id="full" title="全屏或沉浸模式">⛶ 全屏</button></div></div>
 <div id="drop" class="drop"><div style="font-size:46px">◎</div><h1>打开 360° 全景图片</h1><p>拖拽 JPG、PNG、WebP 图片到这里<br>推荐使用 <b style="color:#fff">2:1 等距柱状投影（Equirectangular）</b><br>例如 4096 × 2048、8192 × 4096</p><button id="choose" class="primary">选择本地图片</button><p style="font-size:11px">所有处理均在浏览器本地完成</p></div>
-<div id="mobileSteer" class="mobile-steer" aria-label="快速左右环视"><div class="steer-head">快速环视 <span>左右拖动</span></div><div class="steer-control"><span>◀</span><input id="steer" type="range" min="-100" max="100" value="0" step="1" aria-label="向左或向右快速旋转"><span>▶</span></div></div>
+<div id="mobileSteer" class="mobile-steer" aria-label="快速左右环视操作区"><div class="steer-head"><span>快速环视</span><button id="steerHide" type="button" aria-label="收起快速环视">收起 ×</button></div><div id="steerPad" class="steer-pad" aria-label="左右滑动快速环视" role="slider" aria-valuemin="0" aria-valuemax="360" aria-valuenow="0" tabindex="0"><span>◀</span><strong>按住左右滑<br>松手即停</strong><span>▶</span></div><div class="steer-foot"><small>直接拖动·无回弹</small><button id="steerSpeed" type="button" aria-label="切换转向速度">2× 速度</button></div><button id="steerReopen" class="steer-reopen" type="button">⇆ 环视</button></div>
 <div class="bottom"><span>水平 <b id="yaw">0°</b></span><span>俯仰 <b id="pitch">0°</b></span><span>视角 <b id="fov">110°</b></span><span id="size">未导入图片</span></div><div class="hint" id="hint">拖动环视 · 滚轮缩放 · 双击重置 · 支持触屏</div><div class="toast" id="toast"></div><input type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/bmp" id="file">
 <script>
 (()=>{'use strict';
 const canvas=document.getElementById('view'),gl=canvas.getContext('webgl2',{antialias:false,alpha:false,preserveDrawingBuffer:false})||canvas.getContext('webgl',{antialias:false,alpha:false,preserveDrawingBuffer:false});
-const $=id=>document.getElementById(id);let yaw=0,pitch=0,fov=110,auto=false,hasImage=false,texture=null,program=null,drag=null,pointers=new Map(),lastPinch=0,lastTime=performance.now(),steer=0,dirty=true,sourceURL=null,texWidth=0,texHeight=0;
+const $=id=>document.getElementById(id);let yaw=0,pitch=0,fov=110,auto=false,hasImage=false,texture=null,program=null,drag=null,pointers=new Map(),lastPinch=0,lastTime=performance.now(),dirty=true,sourceURL=null,texWidth=0,texHeight=0;
 function toast(msg){$('toast').textContent=msg;$('toast').style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').style.display='none',3600)}
 if(!gl){$('drop').querySelector('h1').textContent='浏览器不支持 WebGL';$('drop').querySelector('p').textContent='请启用浏览器硬件加速，或换用最新版 Chrome / Edge。';return}
 const vs=`attribute vec2 position;varying vec2 uv;void main(){uv=position;gl_Position=vec4(position,0.,1.);}`;
@@ -54,16 +57,34 @@ try{program=gl.createProgram();gl.attachShader(program,shader(gl.VERTEX_SHADER,v
 const uniforms={res:gl.getUniformLocation(program,'resolution'),yaw:gl.getUniformLocation(program,'yaw'),pitch:gl.getUniformLocation(program,'pitch'),fov:gl.getUniformLocation(program,'vfov')};
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}function normalize(a){return (a%360+360)%360}function updateStats(){$('yaw').textContent=normalize(yaw).toFixed(1)+'°';$('pitch').textContent=pitch.toFixed(1)+'°';$('fov').textContent=fov.toFixed(0)+'°';dirty=true}
 function resize(){const scale=Math.min(devicePixelRatio||1,2),w=Math.max(1,Math.floor(canvas.clientWidth*scale)),h=Math.max(1,Math.floor(canvas.clientHeight*scale));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;gl.viewport(0,0,w,h);dirty=true}}
-function render(t){let dt=Math.min(0.05,(t-lastTime)/1000);lastTime=t;if(hasImage&&(auto||steer!==0)){yaw+=dt*((auto?8:0)+steer*95);updateStats()}resize();if(dirty){gl.clearColor(.035,.043,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);if(texture){gl.useProgram(program);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.uniform2f(uniforms.res,canvas.width,canvas.height);gl.uniform1f(uniforms.yaw,yaw*Math.PI/180);gl.uniform1f(uniforms.pitch,pitch*Math.PI/180);gl.uniform1f(uniforms.fov,fov*Math.PI/180);gl.drawArrays(gl.TRIANGLES,0,6)}dirty=false}requestAnimationFrame(render)}requestAnimationFrame(render);
+function render(t){let dt=Math.min(0.05,(t-lastTime)/1000);lastTime=t;if(hasImage&&auto){yaw+=dt*8;updateStats()}resize();if(dirty){gl.clearColor(.035,.043,.06,1);gl.clear(gl.COLOR_BUFFER_BIT);if(texture){gl.useProgram(program);gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,texture);gl.uniform2f(uniforms.res,canvas.width,canvas.height);gl.uniform1f(uniforms.yaw,yaw*Math.PI/180);gl.uniform1f(uniforms.pitch,pitch*Math.PI/180);gl.uniform1f(uniforms.fov,fov*Math.PI/180);gl.drawArrays(gl.TRIANGLES,0,6)}dirty=false}requestAnimationFrame(render)}requestAnimationFrame(render);
 function zoom(delta){fov=clamp(fov+delta,25,110);updateStats()}
 function reset(){yaw=0;pitch=0;fov=110;updateStats()}
 async function load(file){if(!file)return;if(!file.type.startsWith('image/')&&!/\.(jpe?g|png|webp|avif|bmp)$/i.test(file.name)){toast('请选择 JPG / PNG / WebP 图片');return}let url=URL.createObjectURL(file);const img=new Image();img.onload=()=>{try{const max=gl.getParameter(gl.MAX_TEXTURE_SIZE);if(img.width>max||img.height>max){toast('图片超过显卡单张纹理限制 '+max+'px，请降低图片尺寸');URL.revokeObjectURL(url);return}const newTex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,newTex);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,img);if(gl.getError()!==gl.NO_ERROR)throw Error('显存不足或图片格式不受支持');if(texture)gl.deleteTexture(texture);texture=newTex;texWidth=img.width;texHeight=img.height;hasImage=true;auto=false;$('autorotate').classList.remove('active');$('drop').classList.add('hidden');$('filename').textContent=file.name;$('size').textContent=img.width+' × '+img.height;reset();if(Math.abs(img.width/img.height-2)>0.09)toast('已打开图片，但其比例不是 2:1，可能会产生全景拉伸');URL.revokeObjectURL(url)}catch(err){toast('加载失败：'+err.message);URL.revokeObjectURL(url)}};img.onerror=()=>{toast('图片无法解码');URL.revokeObjectURL(url)};img.src=url}
-const steerInput=$('steer');
-function stopSteer(){steer=0;steerInput.value='0'}
-steerInput.addEventListener('input',()=>{steer=Number(steerInput.value)/100;if(Math.abs(steer)<.06)steer=0});
-for(const event of ['pointerup','pointercancel','lostpointercapture','touchend','touchcancel','change','blur'])steerInput.addEventListener(event,stopSteer);
-window.addEventListener('pointerup',stopSteer);
-window.addEventListener('blur',stopSteer);
+const steerPad=$('steerPad');
+let steerPointer=null,steerLastX=0,steerSpeedIndex=1;
+const steerSpeeds=[1,2,3];
+function endSteer(e){if(steerPointer===null)return;if(e&&e.pointerId!==undefined&&e.pointerId!==steerPointer)return;steerPointer=null;steerPad.classList.remove('pressed')}
+steerPad.addEventListener('pointerdown',e=>{
+ if(steerPointer!==null)return;
+ e.preventDefault();steerPointer=e.pointerId;steerLastX=e.clientX;
+ try{steerPad.setPointerCapture(e.pointerId)}catch(_){}
+ steerPad.classList.add('pressed');
+});
+steerPad.addEventListener('pointermove',e=>{
+ if(steerPointer!==e.pointerId)return;
+ e.preventDefault();
+ const dx=e.clientX-steerLastX;steerLastX=e.clientX;
+ // 以实际位移控制旋转角度，避免长按时持续自转
+ yaw-=dx*.55*steerSpeeds[steerSpeedIndex];
+ updateStats();steerPad.setAttribute('aria-valuenow',String(Math.round(normalize(yaw))));
+});
+for(const event of ['pointerup','pointercancel','lostpointercapture'])steerPad.addEventListener(event,endSteer);
+window.addEventListener('blur',()=>endSteer());
+$('steerSpeed').onclick=()=>{steerSpeedIndex=(steerSpeedIndex+1)%steerSpeeds.length;$('steerSpeed').textContent=steerSpeeds[steerSpeedIndex]+'× 速度'};
+$('steerHide').onclick=()=>$('mobileSteer').classList.add('minimized');
+$('steerReopen').onclick=()=>$('mobileSteer').classList.remove('minimized');
+steerPad.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();yaw+=(e.key==='ArrowLeft'?-1:1)*5*steerSpeeds[steerSpeedIndex];updateStats()}});
 $('file').addEventListener('change',e=>{load(e.target.files[0]);e.target.value=''});$('choose').onclick=$('open').onclick=()=>$('file').click();$('reset').onclick=reset;$('zoomIn').onclick=()=>zoom(-10);$('zoomOut').onclick=()=>zoom(10);$('left').onclick=()=>{yaw-=15;updateStats()};$('right').onclick=()=>{yaw+=15;updateStats()};$('autorotate').onclick=()=>{auto=!auto;$('autorotate').classList.toggle('active',auto)};let pseudoFullscreen=false;
 function refreshFullButton(){const active=!!document.fullscreenElement||pseudoFullscreen;$('full').textContent=active?'⛶ 退出全屏':'⛶ 全屏';$('full').classList.toggle('active',active);dirty=true;setTimeout(resize,80)}
 function setPseudoFullscreen(active){pseudoFullscreen=active;document.body.classList.toggle('pseudo-fullscreen',active);refreshFullButton()}
